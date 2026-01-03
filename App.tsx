@@ -6,6 +6,9 @@ import LudoGame from './components/LudoGame';
 import LudoSetup from './components/LudoSetup';
 import { GamePhase, PlayerColor } from './types';
 
+// CHANGE THIS TO YOUR NAME TO PUBLISH AS YOUR OWN
+const OPERATOR_NAME = "YOUR NAME"; 
+
 interface SlotConfig {
   color: PlayerColor;
   type: 'HUMAN' | 'AI' | 'CLOSED';
@@ -36,7 +39,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black">
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-black">
       {/* Background Video Simulator */}
       <div className="absolute inset-0 z-0">
         <video
@@ -52,17 +55,28 @@ const App: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 w-full max-w-6xl px-4 py-8">
+      <div className="relative z-10 w-full max-w-6xl px-4 py-8 flex-1 flex flex-col justify-center">
         <header className="text-center mb-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="inline-block px-4 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 mb-4"
+          >
+            <span className="text-[10px] font-orbitron font-bold text-blue-400 tracking-[0.5em] uppercase">
+              Operator: {OPERATOR_NAME}
+            </span>
+          </motion.div>
+          
           <motion.h1 
             initial={{ y: -50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="text-4xl md:text-6xl font-orbitron font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-500 neon-text-blue"
+            className="text-4xl md:text-6xl font-orbitron font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-500"
+            style={{ filter: 'drop-shadow(0 0 15px rgba(0,212,255,0.3))' }}
           >
             NEON ARENA
           </motion.h1>
           <p className="text-blue-300/40 font-medium tracking-widest uppercase text-[10px] mt-2 font-orbitron">
-            Multi-Operative Board Simulation
+            Multi-Operative Board Simulation v3.0
           </p>
         </header>
 
@@ -88,7 +102,7 @@ const App: React.FC = () => {
               exit={{ opacity: 0, scale: 1.1 }}
               className="flex justify-center"
             >
-              <LudoSetup onStart={handleStartLudo} onBack={resetAll} />
+              <LudoSetup onStart={handleStartLudo} onBack={resetAll} operator={OPERATOR_NAME} />
             </motion.div>
           )}
 
@@ -110,6 +124,18 @@ const App: React.FC = () => {
         </AnimatePresence>
       </div>
 
+      {/* Branded Footer */}
+      <footer className="relative z-20 w-full py-6 px-10 flex justify-between items-center bg-black/40 backdrop-blur-md border-t border-white/5">
+        <div className="flex items-center gap-4">
+           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_#22c55e]"></div>
+           <span className="text-[10px] font-orbitron text-white/40 tracking-widest uppercase font-bold">System Status: Optimal</span>
+        </div>
+        <div className="text-right">
+           <p className="text-[9px] font-orbitron text-white/20 uppercase tracking-[0.3em] mb-1">Developed & Authorized By</p>
+           <p className="text-xs font-orbitron text-white font-bold tracking-[0.2em]">{OPERATOR_NAME}</p>
+        </div>
+      </footer>
+
       {/* Unlock Notification */}
       <AnimatePresence>
         {unlocked && phase === 'GUESS' && (
@@ -117,7 +143,7 @@ const App: React.FC = () => {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="absolute bottom-10 left-1/2 transform -translate-x-1/2 glass border-pink-500/50 p-6 rounded-2xl flex flex-col items-center gap-2 z-50 shadow-[0_0_30px_rgba(236,72,153,0.3)]"
+            className="absolute bottom-24 left-1/2 transform -translate-x-1/2 glass border-pink-500/50 p-6 rounded-2xl flex flex-col items-center gap-2 z-50 shadow-[0_0_30px_rgba(236,72,153,0.3)]"
           >
             <div className="text-pink-400 text-3xl mb-2">
               <i className="fas fa-unlock-alt animate-bounce"></i>

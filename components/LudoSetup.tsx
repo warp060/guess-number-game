@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PlayerColor } from '../types';
 import { COLORS } from '../constants';
@@ -15,9 +15,10 @@ interface SlotConfig {
 interface LudoSetupProps {
   onStart: (configs: SlotConfig[]) => void;
   onBack: () => void;
+  operator: string;
 }
 
-const LudoSetup: React.FC<LudoSetupProps> = ({ onStart, onBack }) => {
+const LudoSetup: React.FC<LudoSetupProps> = ({ onStart, onBack, operator }) => {
   const [slots, setSlots] = useState<SlotConfig[]>([
     { color: 'red', type: 'HUMAN', avatar: `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=red&backgroundColor=b6e3f4` },
     { color: 'blue', type: 'AI', avatar: `https://api.dicebear.com/9.x/bottts-neutral/svg?seed=blue&backgroundColor=c0aede` },
@@ -47,7 +48,7 @@ const LudoSetup: React.FC<LudoSetupProps> = ({ onStart, onBack }) => {
     <div className="flex flex-col lg:flex-row w-full max-w-6xl min-h-[700px] overflow-hidden rounded-[3rem] shadow-[0_0_100px_rgba(255,255,255,0.1)] bg-black border border-white/10">
       
       {/* Sidebar - Control Deck */}
-      <div className="w-full lg:w-64 bg-white flex flex-col p-10 space-y-8">
+      <div className="w-full lg:w-72 bg-white flex flex-col p-10 space-y-8">
         <div className="flex flex-col items-center gap-4">
            <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center shadow-xl">
               <i className="fas fa-gamepad text-white text-2xl"></i>
@@ -56,6 +57,11 @@ const LudoSetup: React.FC<LudoSetupProps> = ({ onStart, onBack }) => {
         </div>
         
         <div className="space-y-6 pt-10 border-t border-black/10">
+          <div className="p-4 bg-black/5 rounded-2xl border border-black/10">
+            <p className="text-[9px] text-black/40 font-bold uppercase tracking-widest mb-1">System Operator</p>
+            <p className="text-sm font-orbitron text-black font-black truncate">{operator}</p>
+          </div>
+
           <div className="space-y-2">
             <p className="text-[10px] text-black/40 font-bold uppercase tracking-widest">Active Players</p>
             <p className="text-2xl font-orbitron text-black font-bold">{activePlayersCount} / 4</p>

@@ -1,0 +1,5 @@
+{
+  "name": "Guess the number",
+  "description": "A high-stakes neon gaming experience where you must first conquer the 'Guess Number' challenge to unlock a full-featured Ludo game with AI opponents.",
+  "requestFramePermissions": []
+}

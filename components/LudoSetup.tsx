@@ -1,8 +1,11 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PlayerColor } from '../types';
-import { COLORS } from '../constants';
+import { PlayerColor } from '../types.ts';
+import { COLORS } from '../constants.ts';
+
+// Fix: Casting motion components to any to avoid "Property 'initial' does not exist" type errors
+const MotionDiv = motion.div as any;
 
 type PlayerType = 'HUMAN' | 'AI' | 'CLOSED';
 
@@ -91,14 +94,14 @@ const LudoSetup: React.FC<LudoSetupProps> = ({ onStart, onBack, operator }) => {
         </div>
 
         {slots.map((slot, index) => (
-          <motion.div 
+          <MotionDiv 
             key={slot.color}
             whileHover={{ scale: 1.02 }}
             className={`relative p-8 rounded-[2.5rem] border-2 transition-all duration-500 flex flex-col items-center gap-6 ${slot.type === 'CLOSED' ? 'border-white/5 opacity-40 grayscale' : 'border-white/20 bg-white/5 shadow-2xl'}`}
           >
             {/* Slot Header */}
             <div className="flex items-center justify-between w-full">
-              <span className="font-orbitron text-[10px] font-bold tracking-[0.3em] uppercase" style={{ color: COLORS[slot.color] }}>
+              <span className="font-orbitron text-[10px] font-bold tracking-[0.3em] uppercase" style={{ color: (COLORS as any)[slot.color] }}>
                 {slot.color} Sector
               </span>
               <button 
@@ -129,7 +132,7 @@ const LudoSetup: React.FC<LudoSetupProps> = ({ onStart, onBack, operator }) => {
             ) : (
               <div className="w-full space-y-3">
                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                    <motion.div 
+                    <MotionDiv 
                       className="h-full bg-white" 
                       initial={{ width: 0 }} 
                       animate={{ width: '100%' }} 
@@ -139,7 +142,7 @@ const LudoSetup: React.FC<LudoSetupProps> = ({ onStart, onBack, operator }) => {
                  <p className="text-center text-[9px] font-orbitron text-white/40 uppercase tracking-widest">Neural Link Sync Complete</p>
               </div>
             )}
-          </motion.div>
+          </MotionDiv>
         ))}
       </div>
     </div>

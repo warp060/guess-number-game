@@ -2,6 +2,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const MotionDiv = motion.div as any;
+const MotionP = motion.p as any;
+const MotionButton = motion.button as any;
+const MotionSpan = motion.span as any;
+
 interface GuessGameProps {
   onWin: () => void;
 }
@@ -20,7 +25,6 @@ const GuessGame: React.FC<GuessGameProps> = ({ onWin }) => {
   }, []);
 
   const resetGame = () => {
-    // Range: 1-10
     setTarget(Math.floor(Math.random() * 10) + 1);
     setGuesses([]);
     setAttempts(7);
@@ -35,7 +39,6 @@ const GuessGame: React.FC<GuessGameProps> = ({ onWin }) => {
     if (status !== 'playing' || !guess) return;
 
     const num = parseInt(guess);
-    // Validation for 1-10 range
     if (isNaN(num) || num < 1 || num > 10) {
       setMessage('ERROR: YOU MUST ENTER A NUMBER BETWEEN 1 TO 10.');
       return;
@@ -46,7 +49,6 @@ const GuessGame: React.FC<GuessGameProps> = ({ onWin }) => {
       return;
     }
 
-    // Enter scanning state for tension
     setStatus('scanning');
     setMessage('ANALYZING SIGNAL PATH...');
 
@@ -76,11 +78,9 @@ const GuessGame: React.FC<GuessGameProps> = ({ onWin }) => {
 
   return (
     <div className="w-full max-w-md relative">
-      {/* Decorative Border Glow */}
       <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-cyan-400 to-purple-600 rounded-[2.5rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
       
       <div className="relative glass p-8 rounded-[2.5rem] border border-blue-500/30 shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
-        {/* Background Scanline Effect */}
         <div className="absolute inset-0 pointer-events-none opacity-10 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%]"></div>
 
         <div className="flex justify-between items-center mb-8 relative z-10">
@@ -90,7 +90,7 @@ const GuessGame: React.FC<GuessGameProps> = ({ onWin }) => {
           </div>
           <div className="flex gap-1.5">
             {[...Array(7)].map((_, i) => (
-              <motion.div 
+              <MotionDiv 
                 key={i} 
                 initial={false}
                 animate={{
@@ -105,9 +105,9 @@ const GuessGame: React.FC<GuessGameProps> = ({ onWin }) => {
           </div>
         </div>
 
-        <div className="mb-10 text-center h-20 flex items-center justify-center relative z-10">
+        <div className="mb-10 text-center h-20 flex items-center justify-center relative z-10 px-4">
           <AnimatePresence mode="wait">
-            <motion.p
+            <MotionP
               key={message}
               initial={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
               animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
@@ -119,13 +119,13 @@ const GuessGame: React.FC<GuessGameProps> = ({ onWin }) => {
               }`}
             >
               {message}
-            </motion.p>
+            </MotionP>
           </AnimatePresence>
         </div>
 
         <div className="mb-8 relative z-10">
           <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden border border-white/5">
-            <motion.div 
+            <MotionDiv 
               className="h-full bg-gradient-to-r from-cyan-600 to-blue-400"
               initial={{ width: '100%' }}
               animate={{ width: `${(attempts / 7) * 100}%` }}
@@ -154,7 +154,7 @@ const GuessGame: React.FC<GuessGameProps> = ({ onWin }) => {
               }`}
             />
             {status === 'scanning' && (
-              <motion.div 
+              <MotionDiv 
                 layoutId="scanning-bar"
                 className="absolute left-0 right-0 h-1 bg-cyan-400 z-20"
                 animate={{ top: ['10%', '90%', '10%'] }}
@@ -166,7 +166,7 @@ const GuessGame: React.FC<GuessGameProps> = ({ onWin }) => {
           
           <AnimatePresence mode="wait">
             {status === 'playing' ? (
-              <motion.button
+              <MotionButton
                 key="btn-process"
                 type="submit"
                 initial={{ opacity: 0 }}
@@ -175,18 +175,18 @@ const GuessGame: React.FC<GuessGameProps> = ({ onWin }) => {
                 className="w-full py-5 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-2xl font-orbitron font-bold text-lg uppercase tracking-[0.3em] hover:brightness-125 hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_20px_rgba(0,212,255,0.3)] border border-cyan-400/50"
               >
                 Inject Pulse
-              </motion.button>
+              </MotionButton>
             ) : status === 'scanning' ? (
-              <motion.div
+              <MotionDiv
                 key="btn-scanning"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="w-full py-5 bg-yellow-500/10 border border-yellow-500/50 rounded-2xl text-yellow-400 font-orbitron font-bold text-center tracking-widest animate-pulse"
               >
                 SCANNING...
-              </motion.div>
+              </MotionDiv>
             ) : status === 'lost' ? (
-              <motion.button
+              <MotionButton
                 key="btn-retry"
                 type="button"
                 onClick={resetGame}
@@ -195,14 +195,14 @@ const GuessGame: React.FC<GuessGameProps> = ({ onWin }) => {
                 className="w-full py-5 bg-pink-600/20 border border-pink-500 rounded-2xl font-orbitron font-bold text-lg uppercase tracking-[0.3em] hover:bg-pink-600/30 transition-all text-pink-400"
               >
                 Retry Link
-              </motion.button>
+              </MotionButton>
             ) : (
-              <motion.div 
+              <MotionDiv 
                 key="btn-won"
                 className="w-full py-5 text-center text-green-400 font-orbitron font-bold tracking-[0.4em] animate-bounce"
               >
                 UNLOCKED
-              </motion.div>
+              </MotionDiv>
             )}
           </AnimatePresence>
         </form>
@@ -216,7 +216,7 @@ const GuessGame: React.FC<GuessGameProps> = ({ onWin }) => {
           <div className="flex flex-wrap gap-2 justify-center min-h-[44px]">
             {guesses.length === 0 && <span className="text-[10px] text-white/10 italic font-orbitron uppercase py-3">No data recorded...</span>}
             {guesses.map((g, idx) => (
-              <motion.span
+              <MotionSpan
                 initial={{ scale: 0, opacity: 0, rotateY: 90 }}
                 animate={{ scale: 1, opacity: 1, rotateY: 0 }}
                 key={idx}
@@ -225,16 +225,9 @@ const GuessGame: React.FC<GuessGameProps> = ({ onWin }) => {
                 }`}
               >
                 {g}
-              </motion.span>
+              </MotionSpan>
             ))}
           </div>
-        </div>
-
-        {/* Thematic Footer Decoration */}
-        <div className="mt-8 flex justify-center gap-4 opacity-20">
-            <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></div>
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping delay-75"></div>
-            <div className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping delay-150"></div>
         </div>
       </div>
     </div>

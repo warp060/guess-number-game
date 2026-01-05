@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { motion } from 'framer-motion';
 
 interface DiceProps {
   value: number | null;
@@ -10,43 +9,40 @@ interface DiceProps {
   color: string;
 }
 
-const Dice: React.FC<DiceProps> = ({ value, isRolling, onClick, disabled, color }) => {
+const Dice: React.FC<DiceProps> = ({ value, isRolling, onClick, disabled }) => {
   const getDots = (val: number) => {
+    const dot = <circle r="8" fill="black" />;
     switch (val) {
-      case 1: return <circle cx="50" cy="50" r="10" fill="white" />;
-      case 2: return <><circle cx="30" cy="30" r="10" fill="white" /><circle cx="70" cy="70" r="10" fill="white" /></>;
-      case 3: return <><circle cx="25" cy="25" r="9" fill="white" /><circle cx="50" cy="50" r="9" fill="white" /><circle cx="75" cy="75" r="9" fill="white" /></>;
-      case 4: return <><circle cx="30" cy="30" r="9" fill="white" /><circle cx="70" cy="30" r="9" fill="white" /><circle cx="30" cy="70" r="9" fill="white" /><circle cx="70" cy="70" r="9" fill="white" /></>;
-      case 5: return <><circle cx="25" cy="25" r="8" fill="white" /><circle cx="75" cy="25" r="8" fill="white" /><circle cx="50" cy="50" r="8" fill="white" /><circle cx="25" cy="75" r="8" fill="white" /><circle cx="75" cy="75" r="8" fill="white" /></>;
-      case 6: return <><circle cx="30" cy="25" r="8" fill="white" /><circle cx="70" cy="25" r="8" fill="white" /><circle cx="30" cy="50" r="8" fill="white" /><circle cx="70" cy="50" r="8" fill="white" /><circle cx="30" cy="75" r="8" fill="white" /><circle cx="70" cy="75" r="8" fill="white" /></>;
+      case 1: return <g transform="translate(50,50)">{dot}</g>;
+      // Fix: Using fragment to return multiple SVG elements instead of the comma operator which results in unused expression
+      case 2: return <><g transform="translate(25,25)">{dot}</g><g transform="translate(75,75)">{dot}</g></>;
+      case 3: return <><g transform="translate(20,20)">{dot}</g><g transform="translate(50,50)">{dot}</g><g transform="translate(80,80)">{dot}</g></>;
+      case 4: return <><g transform="translate(25,25)">{dot}</g><g transform="translate(75,25)">{dot}</g><g transform="translate(25,75)">{dot}</g><g transform="translate(75,75)">{dot}</g></>;
+      case 5: return <><g transform="translate(20,20)">{dot}</g><g transform="translate(80,20)">{dot}</g><g transform="translate(50,50)">{dot}</g><g transform="translate(20,80)">{dot}</g><g transform="translate(80,80)">{dot}</g></>;
+      case 6: return <><g transform="translate(30,20)">{dot}</g><g transform="translate(70,20)">{dot}</g><g transform="translate(30,50)">{dot}</g><g transform="translate(70,50)">{dot}</g><g transform="translate(30,80)">{dot}</g><g transform="translate(70,80)">{dot}</g></>;
       default: return null;
     }
   };
 
   return (
-    <div className="relative group">
-      {!disabled && !isRolling && (
-        <motion.div 
-          animate={{ y: [0, -5, 0], opacity: [1, 0.7, 1] }} 
-          transition={{ repeat: Infinity, duration: 2 }}
-          className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white text-black text-[9px] font-orbitron font-black px-4 py-2 rounded-full whitespace-nowrap shadow-xl z-50 uppercase tracking-[0.2em]"
-        >
-          Tap to Roll
-        </motion.div>
-      )}
-      <motion.div
-        animate={isRolling ? { rotate: [0, 180, -180, 360, 0], scale: [1, 1.2, 0.9, 1.1, 1] } : { rotate: 0, scale: 1 }}
-        transition={isRolling ? { duration: 0.6, repeat: Infinity } : { type: "spring", stiffness: 200 }}
-        className={`w-16 h-16 md:w-20 md:h-20 rounded-xl cursor-pointer flex items-center justify-center shadow-2xl transition-all border-4 border-white ${disabled ? 'opacity-20 cursor-not-allowed grayscale' : 'hover:brightness-110 active:scale-95'}`}
-        style={{ backgroundColor: color }}
+    <div className="flex flex-col items-center gap-2">
+      <div 
         onClick={!disabled ? onClick : undefined}
+        className={`w-16 h-16 md:w-20 md:h-20 bg-white border-4 border-black/10 rounded-xl flex items-center justify-center shadow-md transition-all ${disabled ? 'opacity-30 grayscale' : 'cursor-pointer active:scale-95'}`}
       >
-        {value && !isRolling ? (
-          <motion.svg initial={{ scale: 0 }} animate={{ scale: 1 }} viewBox="0 0 100 100" className="w-full h-full p-3">{getDots(value)}</motion.svg>
+        {isRolling ? (
+          <div className="animate-spin text-2xl text-gray-300">
+            <i className="fas fa-dice"></i>
+          </div>
         ) : (
-          <i className="fas fa-dice text-2xl text-white/40"></i>
+          <svg viewBox="0 0 100 100" className="w-full h-full p-2">
+            {value && getDots(value)}
+          </svg>
         )}
-      </motion.div>
+      </div>
+      {!disabled && !isRolling && !value && (
+        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Tap to Roll</span>
+      )}
     </div>
   );
 };

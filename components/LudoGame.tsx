@@ -1,17 +1,9 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Dice from './Dice';
-import Board from './Board';
-import { GameState, Player, PlayerColor, Token } from '../types';
-import { COLORS, INITIAL_TOKENS, SAFE_ZONES, BASE_START_POSITIONS } from '../constants';
-
-const SOUNDS = {
-  roll: 'https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3',
-  move: 'https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3',
-  capture: 'https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3',
-  win: 'https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3',
-};
+import React, { useState, useEffect, useCallback } from 'react';
+import Dice from './Dice.tsx';
+import Board from './Board.tsx';
+import { GameState, Player, PlayerColor, Token } from '../types.ts';
+import { COLORS, INITIAL_TOKENS, SAFE_ZONES, BASE_START_POSITIONS } from '../constants.ts';
 
 interface PlayerConfig {
   color: PlayerColor;
@@ -36,34 +28,15 @@ const LudoGame: React.FC<LudoGameProps> = ({ playerConfigs, onReset }) => {
     }));
 
     const firstIdx = players.findIndex(p => p.isActive);
-
     return {
       players,
       currentPlayerIndex: firstIdx,
       diceValue: null,
       isRolling: false,
-      message: players[firstIdx].isHuman ? 'TAP DICE TO ROLL' : `${players[firstIdx].color.toUpperCase()}'S TURN`,
+      message: `${players[firstIdx].color.toUpperCase()}'S TURN`,
       gameStatus: 'IDLE',
     };
   });
-
-  const audioRefs = useRef<{ [key: string]: HTMLAudioElement | null }>({});
-
-  useEffect(() => {
-    Object.entries(SOUNDS).forEach(([key, url]) => {
-      const audio = new Audio(url);
-      audio.volume = 0.4;
-      audioRefs.current[key] = audio;
-    });
-  }, []);
-
-  const playSound = (sound: keyof typeof SOUNDS) => {
-    const audio = audioRefs.current[sound];
-    if (audio) {
-      audio.currentTime = 0;
-      audio.play().catch(() => {});
-    }
-  };
 
   const currentPlayer = gameState.players[gameState.currentPlayerIndex];
 
@@ -81,22 +54,19 @@ const LudoGame: React.FC<LudoGameProps> = ({ playerConfigs, onReset }) => {
         nextIdx = (nextIdx + 1) % 4;
         iterations++;
       }
-      const nextP = prev.players[nextIdx];
       return {
         ...prev,
         currentPlayerIndex: nextIdx,
         diceValue: null,
         gameStatus: 'IDLE',
-        message: nextP.isHuman ? 'TAP DICE TO ROLL' : `${nextP.color.toUpperCase()}'S TURN`,
+        message: `${prev.players[nextIdx].color.toUpperCase()}'S TURN`,
       };
     });
   }, []);
 
   const handleRollDice = () => {
     if (gameState.gameStatus !== 'IDLE' || gameState.isRolling) return;
-
-    playSound('roll');
-    setGameState(prev => ({ ...prev, isRolling: true, gameStatus: 'ROLLING', message: 'ROLLING...' }));
+    setGameState(prev => ({ ...prev, isRolling: true, gameStatus: 'ROLLING' }));
 
     setTimeout(() => {
       const roll = Math.floor(Math.random() * 6) + 1;
@@ -104,17 +74,17 @@ const LudoGame: React.FC<LudoGameProps> = ({ playerConfigs, onReset }) => {
         const moves = prev.players[prev.currentPlayerIndex].tokens.filter(t => canMoveToken(t, roll));
         if (moves.length === 0) {
           setTimeout(nextTurn, 1000);
-          return { ...prev, diceValue: roll, isRolling: false, gameStatus: 'WAITING_FOR_MOVE', message: 'NO MOVES POSSIBLE' };
+          return { ...prev, diceValue: roll, isRolling: false, gameStatus: 'WAITING_FOR_MOVE', message: 'NO MOVES' };
         }
         return { 
           ...prev, 
           diceValue: roll, 
           isRolling: false, 
           gameStatus: 'WAITING_FOR_MOVE', 
-          message: prev.players[prev.currentPlayerIndex].isHuman ? 'SELECT YOUR TOKEN' : 'AI CALCULATING...' 
+          message: 'CHOOSE TOKEN'
         };
       });
-    }, 800);
+    }, 600);
   };
 
   const handleTokenClick = (token: Token) => {
@@ -124,39 +94,21 @@ const LudoGame: React.FC<LudoGameProps> = ({ playerConfigs, onReset }) => {
     const roll = gameState.diceValue;
     if (!canMoveToken(token, roll)) return;
 
-    playSound('move');
     let newPos = token.position === -1 ? 0 : token.position + roll;
 
     setGameState(prev => {
-      let captured = false;
-      const startIdx = BASE_START_POSITIONS[token.color];
-      const globalIdx = newPos < 52 ? (newPos + startIdx) % 52 : -1;
-      const isSafe = newPos < 52 && SAFE_ZONES.includes(newPos);
-
       const updatedPlayers = prev.players.map(p => {
         if (p.color === token.color) {
           const updatedTokens = p.tokens.map(t => t.id === token.id ? { ...t, position: newPos, isAtHome: newPos === 57 } : t);
           return { ...p, tokens: updatedTokens, hasFinished: updatedTokens.every(ut => ut.isAtHome) };
         }
-        if (globalIdx !== -1 && !isSafe) {
-          const updatedOpponentTokens = p.tokens.map(t => {
-            if (t.position === -1 || t.isAtHome || t.position >= 52) return t;
-            const oppStart = BASE_START_POSITIONS[p.color];
-            const oppGlobal = (t.position + oppStart) % 52;
-            if (oppGlobal === globalIdx) { captured = true; return { ...t, position: -1 }; }
-            return t;
-          });
-          if (captured) return { ...p, tokens: updatedOpponentTokens };
-        }
         return p;
       });
 
-      if (captured) playSound('capture');
       if (updatedPlayers[prev.currentPlayerIndex].hasFinished) {
-        playSound('win');
         return { ...prev, players: updatedPlayers, gameStatus: 'FINISHED', message: `${token.color.toUpperCase()} WINS!` };
       }
-      return { ...prev, players: updatedPlayers, gameStatus: roll === 6 ? 'IDLE' : 'IDLE', message: roll === 6 ? 'SIX! ROLL AGAIN' : prev.message };
+      return { ...prev, players: updatedPlayers, gameStatus: 'IDLE' };
     });
 
     if (roll !== 6) nextTurn();
@@ -164,56 +116,36 @@ const LudoGame: React.FC<LudoGameProps> = ({ playerConfigs, onReset }) => {
 
   useEffect(() => {
     if (!currentPlayer.isHuman && gameState.gameStatus === 'IDLE') {
-      const timer = setTimeout(handleRollDice, 1200);
-      return () => clearTimeout(timer);
+      const t = setTimeout(handleRollDice, 800);
+      return () => clearTimeout(t);
     }
     if (!currentPlayer.isHuman && gameState.gameStatus === 'WAITING_FOR_MOVE') {
-      const timer = setTimeout(() => {
+      const t = setTimeout(() => {
         const moves = currentPlayer.tokens.filter(t => canMoveToken(t, gameState.diceValue!));
         if (moves.length > 0) handleTokenClick(moves[Math.floor(Math.random() * moves.length)]);
         else nextTurn();
-      }, 1000);
-      return () => clearTimeout(timer);
+      }, 800);
+      return () => clearTimeout(t);
     }
   }, [gameState.currentPlayerIndex, gameState.gameStatus, currentPlayer.isHuman, gameState.diceValue]);
 
   return (
-    <div className="flex flex-col lg:flex-row w-full max-w-6xl rounded-[2rem] overflow-hidden bg-slate-900 border border-white/10 shadow-2xl">
-      <div className="w-full lg:w-64 bg-slate-800 p-8 flex flex-col border-r border-white/5">
-        <div className="flex flex-col items-center gap-4 mb-8">
-           <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center shadow-lg">
-              <i className="fas fa-microchip text-slate-800 text-xl"></i>
-           </div>
-           <h3 className="font-orbitron font-bold text-xs tracking-widest text-white opacity-50 uppercase">Arena Control</h3>
-        </div>
-        <div className="flex flex-col gap-3">
-          {gameState.players.filter(p => p.isActive).map((p, idx) => {
-            const isTurn = p.color === currentPlayer.color;
-            return (
-              <motion.div 
-                key={p.color} 
-                animate={isTurn ? { scale: 1.05, opacity: 1 } : { scale: 1, opacity: 0.4 }}
-                className={`flex items-center gap-3 p-3 rounded-xl border ${isTurn ? 'bg-white/10 border-white' : 'border-white/5 bg-transparent'}`}
-              >
-                <div className="w-8 h-8 rounded-lg overflow-hidden bg-black border border-white/20">
-                  <img src={p.avatarUrl} className="w-full h-full object-cover" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-orbitron text-[9px] font-bold text-white uppercase">{p.color}</span>
-                  <span className="text-[7px] text-white/40 uppercase font-bold">{p.isHuman ? 'User' : 'AI'}</span>
-                </div>
-                {isTurn && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
-              </motion.div>
-            );
-          })}
-        </div>
-        <div className="mt-auto pt-6">
-           <button onClick={onReset} className="w-full py-4 text-[9px] font-orbitron font-bold border border-white/20 text-white rounded-xl hover:bg-white/10 transition-colors uppercase tracking-widest">Quit Game</button>
-        </div>
+    <div className="flex flex-col items-center gap-8 w-full max-w-5xl">
+      {/* Header Info Panel */}
+      <div className="bg-white p-4 border-2 border-black flex gap-4 rounded-xl shadow-lg">
+        {gameState.players.filter(p => p.isActive).map(p => (
+          <div 
+            key={p.color}
+            className={`w-12 h-12 border-4 transition-all rounded-lg overflow-hidden ${p.color === currentPlayer.color ? 'border-black scale-110' : 'border-transparent opacity-50'}`}
+            style={{ backgroundColor: COLORS[p.color] }}
+          >
+            <img src={p.avatarUrl} className="w-full h-full object-cover" />
+          </div>
+        ))}
       </div>
 
-      <div className="flex-1 p-6 lg:p-12 flex flex-col items-center justify-center bg-[#020617] relative">
-        <div className="relative z-10 flex flex-col items-center gap-8 w-full">
+      <div className="flex flex-col lg:flex-row items-center gap-10">
+        <div className="ludo-container p-2 shadow-2xl border-4 border-black">
           <Board 
             players={gameState.players.filter(p => p.isActive)} 
             onTokenClick={handleTokenClick} 
@@ -221,32 +153,37 @@ const LudoGame: React.FC<LudoGameProps> = ({ playerConfigs, onReset }) => {
             diceValue={gameState.diceValue}
             movableTokenIds={gameState.diceValue ? currentPlayer.tokens.filter(t => canMoveToken(t, gameState.diceValue!)).map(t => t.id) : []}
           />
+        </div>
 
-          <div className="flex flex-col items-center gap-6 w-full">
-            <div className="bg-white text-black px-10 py-4 rounded-full shadow-xl">
-               <p className="font-orbitron font-black text-[10px] tracking-[0.3em] uppercase text-center">{gameState.message}</p>
-            </div>
-            <div className={currentPlayer.isHuman && gameState.gameStatus === 'IDLE' ? 'scale-110' : 'scale-90 opacity-40 grayscale'}>
-              <Dice value={gameState.diceValue} isRolling={gameState.isRolling} onClick={handleRollDice} disabled={!currentPlayer.isHuman || gameState.gameStatus !== 'IDLE'} color={COLORS[currentPlayer.color]} />
-            </div>
+        <div className="flex flex-col items-center gap-4 bg-white p-6 border-4 border-black rounded-3xl shadow-xl min-w-[200px]">
+          <Dice 
+            value={gameState.diceValue} 
+            isRolling={gameState.isRolling} 
+            onClick={handleRollDice} 
+            disabled={!currentPlayer.isHuman || gameState.gameStatus !== 'IDLE'} 
+            color={COLORS[currentPlayer.color]} 
+          />
+          <div className="text-center font-black uppercase text-sm tracking-widest mt-4 text-black">
+            {gameState.message}
           </div>
+          <button 
+            onClick={onReset} 
+            className="mt-10 px-6 py-2 bg-gray-100 hover:bg-red-100 text-[10px] font-bold text-gray-400 hover:text-red-500 uppercase tracking-widest rounded-full transition-colors"
+          >
+            Exit Game
+          </button>
         </div>
       </div>
-
-      <AnimatePresence>
-        {gameState.gameStatus === 'FINISHED' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-8 backdrop-blur-md">
-            <div className="bg-white p-12 rounded-[3rem] text-center shadow-2xl max-w-sm w-full border-8 border-slate-900">
-               <div className="w-32 h-32 mx-auto mb-6 rounded-3xl overflow-hidden border-4 border-slate-900">
-                 <img src={gameState.players.find(p => p.hasFinished)?.avatarUrl} className="w-full h-full object-cover" />
-               </div>
-               <h2 className="text-4xl font-orbitron font-black text-slate-900 mb-2 uppercase">VICTORY</h2>
-               <p className="font-orbitron text-xs text-slate-500 mb-10 tracking-widest uppercase">{gameState.players.find(p => p.hasFinished)?.color} Secured The Arena</p>
-               <button onClick={onReset} className="w-full py-6 bg-slate-900 text-white rounded-2xl font-orbitron font-bold text-xs tracking-widest uppercase hover:scale-105 transition-transform">Back to Core</button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      
+      {gameState.gameStatus === 'FINISHED' && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white p-12 border-4 border-black text-center max-w-sm w-full rounded-[2rem] shadow-2xl">
+            <h2 className="text-4xl font-black mb-4 uppercase text-black">VICTORY!</h2>
+            <p className="font-bold mb-8 uppercase text-gray-500">{gameState.message}</p>
+            <button onClick={onReset} className="w-full py-4 bg-black text-white font-bold uppercase text-xs tracking-widest rounded-xl hover:scale-105 transition-transform">Restart Arena</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

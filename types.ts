@@ -1,12 +1,13 @@
 
-export type GamePhase = 'GUESS' | 'LUDO_SETUP' | 'LUDO_PLAY';
+export type GamePhase = 'GUESS' | 'SNAKE';
 
+// For Ludo and Setup
 export type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
 
 export interface Token {
   id: number;
   color: PlayerColor;
-  position: number; // -1 means in base, 57 is home
+  position: number;
   isAtHome: boolean;
 }
 
@@ -15,15 +16,23 @@ export interface Player {
   tokens: Token[];
   isHuman: boolean;
   hasFinished: boolean;
-  isActive: boolean; // For choosing 2, 3, or 4 players
+  isActive: boolean;
   avatarUrl: string;
 }
 
+// GameState expanded to accommodate both GuessGame and LudoGame statuses and properties
 export interface GameState {
   players: Player[];
   currentPlayerIndex: number;
   diceValue: number | null;
   isRolling: boolean;
   message: string;
-  gameStatus: 'IDLE' | 'ROLLING' | 'WAITING_FOR_MOVE' | 'FINISHED';
+  gameStatus: 'playing' | 'won' | 'lost' | 'scanning' | 'IDLE' | 'ROLLING' | 'WAITING_FOR_MOVE' | 'FINISHED';
 }
+
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';

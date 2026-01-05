@@ -1,158 +1,136 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import GuessGame from './components/GuessGame';
-import LudoGame from './components/LudoGame';
-import LudoSetup from './components/LudoSetup';
-import { GamePhase, PlayerColor } from './types';
+import GuessGame from './components/GuessGame.tsx';
+import SnakeGame from './components/SnakeGame.tsx';
+import { GamePhase } from './types.ts';
 
-// CHANGE THIS TO YOUR NAME TO PUBLISH AS YOUR OWN
-const OPERATOR_NAME = "YOUR NAME"; 
-
-interface SlotConfig {
-  color: PlayerColor;
-  type: 'HUMAN' | 'AI' | 'CLOSED';
-  avatar: string;
-}
+const MotionDiv = motion.div as any;
+const MotionH1 = motion.h1 as any;
 
 const App: React.FC = () => {
   const [phase, setPhase] = useState<GamePhase>('GUESS');
   const [unlocked, setUnlocked] = useState(false);
-  const [ludoConfig, setLudoConfig] = useState<SlotConfig[] | null>(null);
 
   const handleGuessWin = () => {
     setUnlocked(true);
+    // Wait for the "UNLOCKED" animation to finish before switching phase
     setTimeout(() => {
-      setPhase('LUDO_SETUP');
-    }, 2000);
-  };
-
-  const handleStartLudo = (configs: SlotConfig[]) => {
-    setLudoConfig(configs);
-    setPhase('LUDO_PLAY');
+      setPhase('SNAKE');
+      setUnlocked(false);
+    }, 2500);
   };
 
   const resetAll = () => {
     setPhase('GUESS');
     setUnlocked(false);
-    setLudoConfig(null);
   };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-black">
-      {/* Background Video Simulator */}
-      <div className="absolute inset-0 z-0">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-cover opacity-20 grayscale-[0.8] blur-sm"
-        >
-          <source src="https://assets.mixkit.co/videos/preview/mixkit-background-of-moving-blue-and-purple-dots-34411-large.mp4" type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black" />
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-[#0c0032]">
+      {/* Dynamic Cyberpunk Background */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[#0c0032] opacity-90" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent animate-pulse" />
+        {/* Decorative Grid */}
+        <div 
+          className="absolute inset-0 opacity-10" 
+          style={{ 
+            backgroundImage: 'linear-gradient(#3b82f6 1px, transparent 1px), linear-gradient(90deg, #3b82f6 1px, transparent 1px)',
+            backgroundSize: '40px 40px'
+          }} 
+        />
       </div>
 
-      {/* Main Content */}
-      <div className="relative z-10 w-full max-w-6xl px-4 py-8 flex-1 flex flex-col justify-center">
-        <header className="text-center mb-8">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="inline-block px-4 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 mb-4"
-          >
-            <span className="text-[10px] font-orbitron font-bold text-blue-400 tracking-[0.5em] uppercase">
-              Operator: {OPERATOR_NAME}
-            </span>
-          </motion.div>
-          
-          <motion.h1 
-            initial={{ y: -50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="text-4xl md:text-6xl font-orbitron font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-pink-500"
-            style={{ filter: 'drop-shadow(0 0 15px rgba(0,212,255,0.3))' }}
-          >
-            NEON ARENA
-          </motion.h1>
-          <p className="text-blue-300/40 font-medium tracking-widest uppercase text-[10px] mt-2 font-orbitron">
-            Multi-Operative Board Simulation v3.0
-          </p>
-        </header>
+      <div className="relative z-10 w-full max-w-6xl px-4 py-8 flex-1 flex flex-col justify-center items-center">
+        {phase === 'GUESS' && !unlocked && (
+          <header className="text-center mb-12">
+            <MotionDiv
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-block px-4 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10 mb-4"
+            >
+              <span className="text-[10px] font-orbitron font-bold text-cyan-400 tracking-[0.5em] uppercase text-xs">
+                NEURAL PROTOCOL ACTIVE
+              </span>
+            </MotionDiv>
+            
+            <MotionH1 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-5xl md:text-8xl font-orbitron font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]"
+            >
+              NEON ARENA
+            </MotionH1>
+            <p className="mt-4 text-cyan-400/60 font-orbitron text-xs tracking-[0.5em] uppercase">Crack the sequence to enter the grid</p>
+          </header>
+        )}
 
         <AnimatePresence mode="wait">
           {phase === 'GUESS' && (
-            <motion.div
+            <MotionDiv
               key="guess"
-              initial={{ x: -100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 100, opacity: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex justify-center"
-            >
-              <GuessGame onWin={handleGuessWin} />
-            </motion.div>
-          )}
-
-          {phase === 'LUDO_SETUP' && (
-            <motion.div
-              key="setup"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.1 }}
-              className="flex justify-center"
+              className="w-full flex justify-center"
             >
-              <LudoSetup onStart={handleStartLudo} onBack={resetAll} operator={OPERATOR_NAME} />
-            </motion.div>
+              <GuessGame onWin={handleGuessWin} />
+            </MotionDiv>
           )}
 
-          {phase === 'LUDO_PLAY' && ludoConfig && (
-            <motion.div
-              key="ludo"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 1.2, opacity: 0 }}
-              transition={{ duration: 0.5 }}
-              className="flex justify-center"
+          {phase === 'SNAKE' && (
+            <MotionDiv
+              key="snake"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="w-full flex justify-center"
             >
-              <LudoGame 
-                playerConfigs={ludoConfig}
-                onReset={resetAll}
-              />
-            </motion.div>
+              <SnakeGame onBack={resetAll} />
+            </MotionDiv>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Branded Footer */}
-      <footer className="relative z-20 w-full py-6 px-10 flex justify-between items-center bg-black/40 backdrop-blur-md border-t border-white/5">
-        <div className="flex items-center gap-4">
-           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_#22c55e]"></div>
-           <span className="text-[10px] font-orbitron text-white/40 tracking-widest uppercase font-bold">System Status: Optimal</span>
-        </div>
-        <div className="text-right">
-           <p className="text-[9px] font-orbitron text-white/20 uppercase tracking-[0.3em] mb-1">Developed & Authorized By</p>
-           <p className="text-xs font-orbitron text-white font-bold tracking-[0.2em]">{OPERATOR_NAME}</p>
-        </div>
+      <footer className="relative z-20 w-full py-4 px-10 flex justify-between items-center bg-black/40 backdrop-blur-md border-t border-white/5">
+        <span className="text-[9px] font-orbitron text-white/30 uppercase tracking-widest font-bold">Encrypted Link Active</span>
+        <span className="text-[9px] font-orbitron text-white/30 uppercase tracking-widest font-bold">Protocol v2.1.0</span>
       </footer>
 
-      {/* Unlock Notification */}
+      {/* Unlock Overlay */}
       <AnimatePresence>
-        {unlocked && phase === 'GUESS' && (
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
+        {unlocked && (
+          <MotionDiv
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute bottom-24 left-1/2 transform -translate-x-1/2 glass border-pink-500/50 p-6 rounded-2xl flex flex-col items-center gap-2 z-50 shadow-[0_0_30px_rgba(236,72,153,0.3)]"
+            className="fixed inset-0 z-[100] bg-cyan-950/40 backdrop-blur-2xl flex items-center justify-center"
           >
-            <div className="text-pink-400 text-3xl mb-2">
-              <i className="fas fa-unlock-alt animate-bounce"></i>
-            </div>
-            <h2 className="text-2xl font-orbitron font-bold text-white uppercase tracking-tighter">
-              Arena Unlocked!
-            </h2>
-            <p className="text-pink-200/80 text-[10px] font-orbitron tracking-widest uppercase">Protocol Initializing...</p>
-          </motion.div>
+            <MotionDiv
+              initial={{ scale: 0.5, rotateY: 90 }}
+              animate={{ scale: 1, rotateY: 0 }}
+              className="glass p-12 rounded-[3rem] border-cyan-400/50 flex flex-col items-center gap-8 shadow-[0_0_150px_rgba(0,212,255,0.3)]"
+            >
+              <div className="relative">
+                <div className="absolute inset-0 bg-cyan-400 blur-2xl opacity-20 animate-pulse" />
+                <i className="fas fa-microchip text-7xl text-cyan-400 animate-bounce"></i>
+              </div>
+              <div className="text-center space-y-2">
+                <h2 className="text-5xl font-orbitron font-bold text-white uppercase tracking-widest">Core Breached</h2>
+                <p className="text-cyan-400 font-orbitron text-sm tracking-widest">INITIALIZING GRID SIMULATION...</p>
+              </div>
+              <div className="h-1.5 w-64 bg-white/10 rounded-full overflow-hidden border border-white/5">
+                <motion.div 
+                  className="h-full bg-cyan-400"
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 2, ease: "easeInOut" }}
+                  style={{ boxShadow: '0 0 20px #22d3ee' }}
+                />
+              </div>
+            </MotionDiv>
+          </MotionDiv>
         )}
       </AnimatePresence>
     </div>
